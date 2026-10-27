@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onco Efficacy LLM — 肿瘤临床疗效预测垂直模型 | 复泽智药</title>
+<meta name="description" content="从试验注册库、期刊文献、学会年会摘要与卫健委私有数据库构建结构化疗效事实库，并在其上做可溯源的试验级疗效预估。">
+<style>
+  :root{
+    --ink:#1f2937; --grey:#6b7280; --faint:#9aa1ab;
+    --blue:#155c8c; --teal:#1f8a95; --orange:#c8790a;
+    --line:#e5e8ec; --bg:#fff; --soft:#f7f9fb;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:400 16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+         "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+  header{border-bottom:1px solid var(--line);padding:56px 0 28px}
+  .badge{display:inline-block;font-size:12.5px;color:var(--blue);letter-spacing:.02em;
+    border:1px solid var(--blue);border-radius:4px;padding:3px 10px;margin-bottom:18px}
+  h1{font-size:34px;line-height:1.3;font-weight:600;margin:0 0 10px;letter-spacing:-.01em}
+  .sub{font-size:17px;color:var(--grey);margin:0}
+  h2{font-size:21px;font-weight:600;margin:52px 0 6px;letter-spacing:-.005em}
+  h2+.lede{color:var(--grey);margin:0 0 18px;font-size:15.5px}
+  h3{font-size:16px;font-weight:600;margin:28px 0 8px}
+  p{margin:0 0 16px}
+  a{color:var(--blue)}
+  .hr{height:1px;background:var(--line);border:0;margin:44px 0 0}
+  .callout{border-left:3px solid var(--orange);background:#fdf8f1;
+    padding:14px 18px;margin:0 0 24px;font-size:15px}
+  .callout strong{color:var(--orange)}
+  table{border-collapse:collapse;width:100%;margin:0 0 20px;font-size:14.5px}
+  caption{caption-side:bottom;text-align:left;color:var(--faint);font-size:12.5px;padding-top:10px}
+  th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+  thead th{background:var(--soft);font-weight:600;font-size:13.5px;border-bottom:1px solid #d9dee5}
+  tbody tr:last-child td{border-bottom:0}
+  .layer{display:flex;gap:16px;align-items:baseline;border:1.5px solid var(--line);
+    border-left-width:6px;border-radius:7px;padding:13px 16px;margin-bottom:9px}
+  .layer.b{border-left-color:var(--blue)}
+  .layer.t{border-left-color:var(--teal)}
+  .layer.o{border-left-color:var(--orange)}
+  .layer .nm{font-weight:600;min-width:84px;flex:0 0 auto}
+  .layer.b .nm{color:var(--blue)} .layer.t .nm{color:var(--teal)} .layer.o .nm{color:var(--orange)}
+  .layer .sub2{display:block;font-weight:400;font-size:12.5px;color:var(--faint)}
+  .layer .bd{font-size:14.5px}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}
+  .chip{flex:1 1 128px;border:1px solid var(--line);border-radius:7px;
+    background:var(--soft);padding:13px 10px;text-align:center}
+  .chip .n{display:block;font-size:25px;color:var(--blue);font-weight:600;
+    font-variant-numeric:tabular-nums;line-height:1.25}
+  .chip .l{display:block;font-size:12px;color:var(--grey);margin-top:3px}
+  figure{margin:22px 0 0}
+  figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:6px}
+  figcaption{color:var(--faint);font-size:12.5px;margin-top:9px}
+  ol,ul{margin:0 0 16px;padding-left:22px}
+  li{margin-bottom:9px}
+  code{font-family:var(--mono);font-size:13px;background:var(--soft);padding:1.5px 5px;border-radius:3px}
+  .access{display:flex;gap:26px;align-items:center;flex-wrap:wrap;
+    border:1px solid var(--line);border-radius:8px;padding:20px 22px;margin:6px 0 20px}
+  .access img{width:148px;height:148px;display:block;flex:0 0 auto}
+  .access .t{flex:1 1 260px;min-width:0}
+  .access .t p{margin:0 0 8px;font-size:14.5px}
+  .access .u{font-family:var(--mono);font-size:13px;word-break:break-all;color:var(--blue)}
+  footer{border-top:1px solid var(--line);margin-top:52px;padding:24px 0 60px;
+    color:var(--faint);font-size:13px}
+  footer p{margin:0 0 7px}
+  @media (max-width:620px){
+    header{padding-top:38px} h1{font-size:27px} .sub{font-size:15.5px}
+    .layer{flex-direction:column;gap:5px} .layer .nm{min-width:0}
+    table{font-size:13.5px} th,td{padding:9px 10px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p style="margin:0 0 14px;font-size:14px"><a href="index.html">← 复泽智药</a></p>
+  <span class="badge">内测阶段 · 事实库与评测基准已交付</span>
+  <h1>Onco Efficacy LLM</h1>
+  <p class="sub">肿瘤临床疗效预测垂直模型 —— 面向临床开发、BD 与立项、转化医学、投资尽调</p>
+</header>
+
+<h2>定位</h2>
+<p class="lede">护城河不在模型权重，在一个持续更新、字段级可溯源的临床疗效事实库。</p>
+<p>通用医疗大模型回答「这个靶点在二线非小细胞肺癌里大概能做到多少 ORR」时，数字来自参数记忆——
+  张冠李戴、无法回溯、无法被证伪。本项目反过来做：<strong>先把疗效事实结构化，再谈模型</strong>。
+  每一个 ORR、mPFS、HR 都带 NCT 号与 DOI，可以被审稿式核查。</p>
+
+<h2>核心优势</h2>
+<p class="lede">五条，每条都对应通用模型的一个具体失效模式。</p>
+<table>
+  <caption>通用大模型在疗效问答上的失效模式，与本项目的对应设计</caption>
+  <thead><tr><th style="width:32%">通用模型的失效模式</th><th>本项目的应对</th></tr></thead>
+  <tbody>
+    <tr><td>疗效数字靠参数记忆，ORR / mPFS / HR 容易张冠李戴</td>
+        <td>数值全部取自结构化事实库，每条带 NCT 号与出处字段，可回链核验</td></tr>
+    <tr><td>知识截止日期固定，年会新数据读不到</td>
+        <td>注册库与文献增量抓取管线，按周刷新；新数据进事实库而非重训权重</td></tr>
+    <tr><td>无法区分同一药物的不同线数、不同生物标志物亚组</td>
+        <td>事实表显式建模治疗线数、对照臂、标志物亚组，共 24 个字段</td></tr>
+    <tr><td>给不出不确定性，也无法被证伪</td>
+        <td>输出预测区间 + 校准曲线，按时间切分回测，指标公开</td></tr>
+    <tr><td>把能力边界模糊化，暗示能做个体患者预测</td>
+        <td>边界写在明面：公开数据仅汇总级，定位为试验级疗效预估</td></tr>
+  </tbody>
+</table>
+
+<h2>架构：四层分离</h2>
+<p class="lede">能力进权重，出处进检索，疗效数字进事实库，外部数据库进工具调用。</p>
+<div class="layer b"><span class="nm">参数层<span class="sub2">CPT + SFT</span></span>
+  <span class="bd">机制—疗效先验 · 终点选择 · 试验设计推理</span></div>
+<div class="layer t"><span class="nm">检索层<span class="sub2">RAG 带出处引用</span></span>
+  <span class="bd">期刊全文 · 年会摘要 · 答案可回链 DOI</span></div>
+<div class="layer o"><span class="nm">事实库层<span class="sub2">结构化疗效事实表</span></span>
+  <span class="bd">ORR / DCR / mPFS / mOS / HR 与置信区间 · 线数 · 标志物亚组</span></div>
+<div class="layer b"><span class="nm">工具层<span class="sub2">函数调用</span></span>
+  <span class="bd">ClinicalTrials.gov · PubMed/PMC · ChEMBL · openFDA</span></div>
+<p style="margin-top:18px"><strong>抽取即校验：</strong>HR 与置信区间互洽、ORR 分子分母闭合、时间单位归一化、
+  与注册库同 NCT 记录交叉比对。校验不通过的记录<strong>打标保留</strong>而非丢弃，用于量化抽取精度。</p>
+
+<hr class="hr">
+
+<h2>数据底座（实测，非估算）</h2>
+<p class="lede">对 10 个实体瘤与血液瘤检索「已完成的 II/III 期干预性试验」，统计其中已张贴结构化结果者。</p>
+<div class="chips">
+  <div class="chip"><span class="n">9,822</span><span class="l">已完成 II/III 期</span></div>
+  <div class="chip"><span class="n">4,330</span><span class="l">带结构化结果</span></div>
+  <div class="chip"><span class="n">44%</span><span class="l">可直接解析</span></div>
+  <div class="chip"><span class="n">10</span><span class="l">适应症</span></div>
+  <div class="chip"><span class="n">24</span><span class="l">事实表字段</span></div>
+</div>
+<p>约 <strong>44% 的已完成 II/III 期试验带有可直接解析的结构化结果</strong>，量级在万条试验级记录，
+  足以支撑试验级疗效预估。剩余约 56% 需靠期刊文献与年会摘要抽取补齐——
+  这正是抽取管线的价值，也是整个系统的真正上限所在：
+  <strong>决定性能天花板的是召回率，不是模型容量</strong>。</p>
+<figure>
+  <img src="assets/panel_coverage.png"
+       alt="十个瘤种的棒棒糖图：注册库中已张贴结构化结果的试验占比，从胃癌 32% 到多发性骨髓瘤 52%，合计 44%。">
+  <figcaption>各适应症的结构化结果可得率，从胃癌 32% 到多发性骨髓瘤 52%。
+    数据源 ClinicalTrials.gov，检索于 2026-10；按适应症分别检索，合计数存在少量重叠。
+    原始数据见仓库 <code>data/phase0_ctg_coverage.csv</code>。</figcaption>
+</figure>
+
+<h3>私有数据层</h3>
+<p>公开层之外叠加四类私有数据。其中卫健委私有数据库与申办方未公开数据是本项目相对纯公开语料模型的
+  关键增量——阳性结果更易发表，只用公开文献会系统性高估疗效。</p>
+<ul>
+  <li><strong>卫健委私有数据库</strong>——用于模型训练的国家级临床数据资产</li>
+  <li><strong>院内真实世界队列</strong>——疗效随访、影像评估、分子分型</li>
+  <li><strong>申办方未公开试验数据</strong>——含阴性结果，用于纠正发表偏倚</li>
+  <li><strong>专家标注集</strong>——抽取校验金标准与疗效可信度分级</li>
+</ul>
+<div class="callout">
+  <strong>数据合规前置。</strong>卫健委私有数据库与院内队列的使用，以数据使用协议、伦理审批与去标识化
+  处理为前提；相关授权文件在尽调时单独提供，不在本页列示。
+</div>
+
+<hr class="hr">
+
+<h2>训练路线与开源依赖</h2>
+<p class="lede">每一项都可核验许可证，不留尽调死角。</p>
+<table>
+  <caption>基座与协议选型。Anthropic 不发布开放权重模型，其贡献为开放协议与公开方法，非基座权重。</caption>
+  <thead><tr><th style="width:18%">环节</th><th>选型</th><th style="width:26%">许可证</th></tr></thead>
+  <tbody>
+    <tr><td>基座权重</td>
+        <td>DeepSeek-V4 系列（开放权重，1M 上下文）<br><span style="font-size:12.5px;color:var(--faint)">具体参数规格以 DeepSeek 官方模型卡为准</span></td>
+        <td>MIT，开放权重，允许商用与再分发</td></tr>
+    <tr><td>基座备选</td><td>Qwen 开放权重分支</td><td>Apache-2.0，含专利授权条款</td></tr>
+    <tr><td>工具层协议</td>
+        <td>MCP（Model Context Protocol），接入 CT.gov / PubMed / ChEMBL / openFDA</td>
+        <td>Anthropic 2024-11 开源；2025-12 捐赠至 Linux Foundation 旗下 Agentic AI Foundation，规范由 MIT 转 Apache-2.0</td></tr>
+    <tr><td>训练顺序</td>
+        <td>领域继续预训练 CPT → 指令微调 SFT → 事实库检索增强</td>
+        <td>全程不使用商业模型蒸馏数据</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <strong>两条合规红线。</strong>其一，Claude 系列无法作为基座再训练——Anthropic 不发布开放权重模型，
+  Claude Code 亦为专有许可；任何「基于 Anthropic 重新训练」的表述都不成立。
+  其二，全程不从闭源商业模型蒸馏，与同组 <code>cgt-clinical-llm</code> 的语料合规口径保持一致。
+</div>
+
+<h2>怎么证明「最准确」</h2>
+<p class="lede">这是目标，不是现状。证明方式先于结论公开。</p>
+<ol>
+  <li><strong>时间切分，不是随机切分。</strong>早期试验训练、近期试验测试，杜绝信息泄漏——
+      随机切分会让同一试验的不同报告同时落入训练与测试集，把记忆伪装成预测。</li>
+  <li><strong>两个硬指标。</strong>ORR 回归考 MAE 与预测区间覆盖率；PFS 获益方向考 AUC 与校准曲线。
+      不做主观打分，不做人工偏好评测。</li>
+  <li><strong>三条对照基线。</strong>通用 LLM 零样本、表格模型（梯度提升）、两者融合，同一测试集横向比。</li>
+</ol>
+
+<h2>能力边界</h2>
+<p>写在正面而不是脚注里，因为这是数据决定的，不是调参能解决的：</p>
+<ul>
+  <li>公开数据<strong>仅汇总级</strong>，个体患者疗效预测<strong>不在能力范围内</strong>。</li>
+  <li><strong>发表偏倚</strong>会系统性高估疗效，须在建模中显式处理，私有阴性结果是主要抓手。</li>
+  <li>年会摘要与付费墙文献的<strong>召回率是整体性能上限</strong>，而非模型容量。</li>
+  <li>截至目前<strong>模型权重尚未训练</strong>，当前交付为事实库与评测基准。</li>
+</ul>
+
+<hr class="hr">
+
+<h2>扫码接入</h2>
+<div class="access">
+  <img src="assets/access_qr.png" alt="扫码访问本页面的二维码">
+  <div class="t">
+    <p>扫码访问本页，或直接打开：</p>
+    <p class="u">zhu-algorithm.github.io/fuze-zhiyao</p>
+    <p style="color:var(--grey);font-size:13.5px;margin-top:12px">
+      代码与数据仓库为私有，需申请访问权限。推理端点为口令内测。</p>
+  </div>
+</div>
+
+<footer>
+  <p>研究与信息用途，不构成医疗建议。任何临床决策须由掌握完整患者信息的合格医师作出。</p>
+  <p>公开疗效数据来源 ClinicalTrials.gov 与 PubMed/PMC，检索于 2026-10。</p>
+  <p>姊妹项目：<a href="https://zhu-algorithm.github.io/cgt-clinical-llm/">CGT Clinical LLM</a> —— 细胞与基因治疗转化医学垂直模型。</p>
+</footer>
+
+</div>
+</body>
+</html>
