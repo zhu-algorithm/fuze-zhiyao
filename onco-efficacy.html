@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Onco Efficacy LLM — 肿瘤临床疗效预测垂直模型 | 复泽智药</title>
+<title>F-Med — 肿瘤临床疗效预测垂直模型 | 复泽智药</title>
 <meta name="description" content="从试验注册库、期刊文献、学会年会摘要与卫健委私有数据库构建结构化疗效事实库，并在其上做可溯源的试验级疗效预估。">
 <style>
   :root{
@@ -32,6 +32,8 @@
   .callout{border-left:3px solid var(--orange);background:#fdf8f1;
     padding:14px 18px;margin:0 0 24px;font-size:15px}
   .callout strong{color:var(--orange)}
+  .pitch{font-size:17px;line-height:1.8;border-left:3px solid var(--blue);padding:4px 0 4px 20px;margin:0 0 22px}
+  .sub2{font-weight:400;font-size:12px;color:var(--faint)}
   table{border-collapse:collapse;width:100%;margin:0 0 20px;font-size:14.5px}
   caption{caption-side:bottom;text-align:left;color:var(--faint);font-size:12.5px;padding-top:10px}
   th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
@@ -80,8 +82,9 @@
 <header>
   <p style="margin:0 0 14px;font-size:14px"><a href="index.html">← 复泽智药</a></p>
   <span class="badge">内测阶段 · 事实库与评测基准已交付</span>
-  <h1>Onco Efficacy LLM</h1>
+  <h1>F-Med</h1>
   <p class="sub">肿瘤临床疗效预测垂直模型 —— 面向临床开发、BD 与立项、转化医学、投资尽调</p>
+  <p style="font-size:15px;color:var(--grey);margin:14px 0 0">F-Med 是把 DeepSeek 已验证的 <strong>MLA</strong>、<strong>细粒度 + 共享专家 MoE</strong>、<strong>MTP</strong>、<strong>GRPO</strong>，按临床数据的性质重新排布的垂直模型。</p>
 </header>
 
 <h2>定位</h2>
@@ -108,6 +111,22 @@
         <td>边界写在明面：公开数据仅汇总级，定位为试验级疗效预估</td></tr>
   </tbody>
 </table>
+
+
+<h2>F-Med 特点</h2>
+<p class="lede">不是从零造轮子，而是把 DeepSeek 已验证的组件按临床数据的性质重新排布。</p>
+<table>
+  <caption>四个组件各自对应临床数据的一项具体性质；左为组件，右为「为什么临床数据需要它」</caption>
+  <thead><tr><th style="width:17%">组件</th><th style="width:38%">做了什么</th><th>临床数据为什么需要它</th></tr></thead>
+  <tbody>
+    <tr><td><strong>MLA<br><span class='sub2'>潜向量注意力</span></strong></td><td>把 KV cache 压成低秩潜向量，长上下文的显存瓶颈被解开</td><td>临床试验方案书、CSR、整册年会摘要都极长——要能一次读完，而不是分段喂</td></tr>
+    <tr><td><strong>MoE<br><span class='sub2'>细粒度 + 共享专家</span></strong></td><td>细粒度专家按瘤种、终点类型、法规辖区切分；共享专家承载跨瘤种通用的临床统计与话术</td><td>临床语域天然分区，但基础临床统计是所有分区共用的，不该让每个专家重学一遍</td></tr>
+    <tr><td><strong>MTP<br><span class='sub2'>多 token 预测</span></strong></td><td>多 token 训练目标，并提升结构化抽取吞吐</td><td>疗效字段强耦合且成对出现：ORR 的分子分母、HR 与其置信区间，逐 token 预测容易拆散</td></tr>
+    <tr><td><strong>GRPO<br><span class='sub2'>组相对策略优化</span></strong></td><td>按试验分组算组内相对优势，无需人工偏好标注即可做强化学习</td><td>疗效预测的奖励客观可验证（ORR 误差、HR 方向对错），且「同一试验多个臂」天然成组</td></tr>
+  </tbody>
+</table>
+
+<hr class="hr">
 
 <h2>架构：四层分离</h2>
 <p class="lede">能力进权重，出处进检索，疗效数字进事实库，外部数据库进工具调用。</p>

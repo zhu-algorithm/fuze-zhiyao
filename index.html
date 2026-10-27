@@ -47,7 +47,8 @@
   .card .kicker{font-size:12px;letter-spacing:.05em;text-transform:uppercase;
     font-family:var(--mono);color:var(--faint);margin:0 0 7px}
   .card h3{margin:0 0 4px;font-size:19px}
-  .card .zh{font-size:14px;color:var(--grey);margin:0 0 14px}
+  .card .zh{font-size:14px;color:var(--grey);margin:0 0 8px}
+  .sub2{font-weight:400;font-size:12px;color:var(--faint)}
   .card ul{margin:0 0 16px;padding-left:19px;font-size:14.5px}
   .card li{margin-bottom:7px}
   .card .foot{margin-top:auto;font-size:13.5px;color:var(--faint);
@@ -143,8 +144,9 @@
 
   <div class="card onco">
     <p class="kicker">Model 02</p>
-    <h3>Onco Efficacy LLM</h3>
+    <h3>F-Med</h3>
     <p class="zh">肿瘤临床疗效预测垂直模型</p>
+    <p style="font-size:13.5px;color:var(--grey);margin:0 0 13px">F-Med 是把 DeepSeek 已验证的 <strong>MLA</strong>、<strong>细粒度 + 共享专家 MoE</strong>、<strong>MTP</strong>、<strong>GRPO</strong>，按临床数据的性质重新排布的垂直模型。</p>
     <ul>
       <li>面向 <strong>临床开发、BD 与立项、投资尽调</strong></li>
       <li>四层分离：在三层之上独立出<strong>结构化疗效事实库</strong>，ORR / mPFS / HR 全部可回链 NCT 与 DOI</li>
@@ -215,6 +217,23 @@
   <strong>数据合规前置。</strong>卫健委私有数据库与院内队列的使用，以数据使用协议、伦理审批与
   去标识化处理为前提；相关授权文件在尽调时单独提供，不在本页列示。
 </div>
+
+<hr class="hr">
+
+
+<h2>F-Med 特点</h2>
+<p class="lede">不是从零造轮子，而是把 DeepSeek 已验证的组件按临床数据的性质重新排布。</p>
+<p class="pitch">F-Med 是把 DeepSeek 已验证的 <strong>MLA</strong>、<strong>细粒度 + 共享专家 MoE</strong>、<strong>MTP</strong>、<strong>GRPO</strong>，按临床数据的性质重新排布的垂直模型。</p>
+<table>
+  <caption>四个组件各自对应临床数据的一项具体性质；左为组件，右为「为什么临床数据需要它」</caption>
+  <thead><tr><th style="width:17%">组件</th><th style="width:38%">做了什么</th><th>临床数据为什么需要它</th></tr></thead>
+  <tbody>
+    <tr><td><strong>MLA<br><span class='sub2'>潜向量注意力</span></strong></td><td>把 KV cache 压成低秩潜向量，长上下文的显存瓶颈被解开</td><td>临床试验方案书、CSR、整册年会摘要都极长——要能一次读完，而不是分段喂</td></tr>
+    <tr><td><strong>MoE<br><span class='sub2'>细粒度 + 共享专家</span></strong></td><td>细粒度专家按瘤种、终点类型、法规辖区切分；共享专家承载跨瘤种通用的临床统计与话术</td><td>临床语域天然分区，但基础临床统计是所有分区共用的，不该让每个专家重学一遍</td></tr>
+    <tr><td><strong>MTP<br><span class='sub2'>多 token 预测</span></strong></td><td>多 token 训练目标，并提升结构化抽取吞吐</td><td>疗效字段强耦合且成对出现：ORR 的分子分母、HR 与其置信区间，逐 token 预测容易拆散</td></tr>
+    <tr><td><strong>GRPO<br><span class='sub2'>组相对策略优化</span></strong></td><td>按试验分组算组内相对优势，无需人工偏好标注即可做强化学习</td><td>疗效预测的奖励客观可验证（ORR 误差、HR 方向对错），且「同一试验多个臂」天然成组</td></tr>
+  </tbody>
+</table>
 
 <hr class="hr">
 
