@@ -397,6 +397,44 @@
 </table>
 <p class="note">剂量上限表与间隔表均为<strong>演示用种子数据，非临床权威数据</strong>。真实部署须由现行《药品说明书》、临床路径与专科指南逐项解析生成，并记录版本号与条款号。</p>
 
+<h2>医院价值栈：四模块实现与 DRG 双方接口</h2>
+<p>上一节的「向下」四项已落为可运行代码（<code>fmed_hv/</code>，606 行，含回归测试）。四个模块各自带有一条<strong>反向约束</strong>——因为每一个都可以被改造成它的反面。</p>
+<table>
+<tr><th>模块</th><th>做什么</th><th>反向约束（模块拒绝执行的事）</th></tr>
+<tr><td><strong>编码回补</strong><br><code>coding_recovery.py</code></td>
+<td>识别低编码病例，输出可回补金额与凭据链</td>
+<td><strong>无硬凭据即拒绝输出建议。</strong>必须引用手术记录、麻醉记录、检验报告、影像报告、病理报告等证明该并发症／操作<strong>真实发生</strong>的凭据；<strong>叙述性文字不算</strong>。被拒金额单独列示，<strong>明确不得计入医院收益测算</strong>——这是与高套工具的边界。候选分组<em>低于</em>已填报的病例被判为疑似高套，转付方侧处理，本模块不出建议。</td></tr>
+<tr><td><strong>风险护盾</strong><br><code>risk_shield.py</code></td>
+<td>开医嘱时实时拦截，默认 SLA 800 ms</td>
+<td><strong>超时必须放行（fail-open）。</strong>截止时间施加在检查本身而非两次检查之间：单个慢检查被弃用，不等它跑完；检查器抛异常同样放行。实测 SLA 300 ms 下墙钟 311 ms 返回。模块<strong>不输出「已避免损失金额」</strong>——提醒金额不等于避免损失。采纳率与超时率考核<strong>系统本身</strong>，不考核医生。</td></tr>
+<tr><td><strong>申诉引擎</strong><br><code>appeal_engine.py</code></td>
+<td>按拒付时点的条文版本（as-of）生成带溯源的申诉材料</td>
+<td><strong>两类拒绝生成：</strong>L2 事实核验为 CONTRADICTED 的病例——生成申诉等于为造假背书；无客观证据仅病历自述的病例——注定被驳回，只消耗医院申诉成本并稀释改判率这一付方质量指标。模块如实返回「拒付成立」清单。</td></tr>
+<tr><td><strong>DRG 运营分析</strong><br><code>drg_ops.py</code></td>
+<td>病组盈亏、临床路径偏差、特例单议额度（DRG 5%／DIP 5‰）</td>
+<td><strong>推诿监测：</strong>亏损病组收治量环比下降 ≥20% 即告警为疑似推诿。<strong>质量配重：</strong>CMI 与重症收治率必须与盈亏分析<strong>同权呈现</strong>——两者下降而盈亏改善，意味着利润来自病例选择而非效率提升。额度内的合理特例申报是政策救济通道，不是违规。</td></tr>
+</table>
+
+<h3 style="font-size:16px;margin:20px 0 8px">DRG 接口：按用途分区，不是给两家同一个出口</h3>
+<div class="callout">
+<p><strong>卫健委与医保局对 DRG 数据有不同的法定用途，因此允许输出的字段必须不同。</strong>医保局看支付正确性（分组准确性、高套／低编、法定损失计算）；卫健委看医疗质量（CMI、四级手术占比、低风险组死亡率、时间／费用消耗指数）。</p>
+<p>核心治理约束，也是这个模块存在的首要理由：<strong>医保局的拒付与违规信号，不得流入卫健委的绩效考核。</strong>否则「拒付 → 记分 → 绩效 → 职称」叠成一条链，而那正是让医院铁了心要让系统失效的机制。一个把两家出口合并的接口，技术上省事，治理上是灾难。</p>
+<p>反向约束同样成立：<strong>卫健委的质量评分不得回流医保局用作拒付依据</strong>——质量差不是违规，不构成不予支付的法定理由。</p>
+</div>
+<table>
+<tr><th>字段</th><th>医保局</th><th>卫健委</th><th>医院</th></tr>
+<tr><td>分组结果 / 权重 / 例数 / 平均住院日</td><td>✓</td><td>✓</td><td>✓</td></tr>
+<tr><td>支付金额 <code>payment_amount</code></td><td>✓</td><td>—</td><td>✓</td></tr>
+<tr><td>高套标记与法定损失金额</td><td>✓</td><td>—</td><td>—</td></tr>
+<tr><td>拒付标记 / 拒付金额</td><td>✓</td><td><strong>—</strong></td><td>✓</td></tr>
+<tr><td>违规评分 / 移送状态</td><td>✓</td><td><strong>—</strong></td><td>—</td></tr>
+<tr><td>低编回补缺口 <code>undercoding_gap</code></td><td>—</td><td>—</td><td>✓</td></tr>
+<tr><td>CMI / 四级手术占比 / 低风险组死亡率</td><td><strong>—</strong></td><td>✓</td><td>✓</td></tr>
+<tr><td>时间消耗指数 / 费用消耗指数 / 30 日再入院</td><td><strong>—</strong></td><td>✓</td><td>✓</td></tr>
+</table>
+<p>越权访问与禁止流向均为<strong>硬失败</strong>（抛 <code>ScopeDenied</code>），不降级为告警，并逐字段说明拒绝理由。实测：卫健委索取 <code>denial_amount</code> 被拒；医保局 → 卫健委传递拒付信号被拒；卫健委 → 医保局回流质量评分被拒。不变量 <code>audit_separation()</code> 断言两域专属字段<strong>交集为空</strong>。</p>
+<p class="muted">医保局视图屏蔽 3 项质量字段，卫健委视图屏蔽 5 项支付与违规字段，医院视图屏蔽 2 项监管内部字段——同一条记录，三个主体看到三份内容。</p>
+
 <h2>业内定位：上海已经有什么</h2>
 <div class="callout">
 <p><strong>上海不是空白场地。</strong>上海市医保局「大数据＋AI 赋能医保智慧监管」获 <strong>2024 全国智慧医保大赛一等奖</strong>，已建成：20 余个监管模型；<strong>24 万条监控知识库 ＋ 6 万条规则库</strong>；多卡聚集、<strong>三费预警</strong>（同业、同专科、同病种的费用分布偏离）、人床分离、人卡分离、异常检验、一脸多卡；DRG/DIP 循证轨迹（FP-Growth 关联规则）；知识图谱、<strong>无监督机器学习、社区检测、多视图双聚类</strong>。五年追回近 7 亿元（违规机构约 6.5 亿、违规个人近 3,000 万）。</p>
