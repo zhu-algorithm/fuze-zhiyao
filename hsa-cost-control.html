@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F-Med 医保智能体 — 基金监管与控费 | 复泽智药</title>
+<meta name="description" content="规则层直接消费国家医保局智能监管两库，大模型只承担自然语言支付范围限定对自然语言病历的适用判定；含上海分险种控费测算与事前中后风控矩阵。">
+<style>
+  :root{
+    --ink:#1f2937; --grey:#6b7280; --faint:#9aa1ab;
+    --blue:#155c8c; --teal:#1f8a95; --orange:#c8790a;
+    --line:#e5e8ec; --bg:#fff; --soft:#f7f9fb;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:400 16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+         "Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+  header{border-bottom:1px solid var(--line);padding:56px 0 28px}
+  .badge{display:inline-block;font-size:12.5px;color:var(--blue);letter-spacing:.02em;
+    border:1px solid var(--blue);border-radius:4px;padding:3px 10px;margin-bottom:18px}
+  h1{font-size:34px;line-height:1.3;font-weight:600;margin:0 0 10px;letter-spacing:-.01em}
+  .sub{font-size:17px;color:var(--grey);margin:0}
+  h2{font-size:21px;font-weight:600;margin:52px 0 6px;letter-spacing:-.005em}
+  h2+.lede{color:var(--grey);margin:0 0 18px;font-size:15.5px}
+  h3{font-size:16px;font-weight:600;margin:28px 0 8px}
+  p{margin:0 0 16px}
+  a{color:var(--blue)}
+  .hr{height:1px;background:var(--line);border:0;margin:44px 0 0}
+  .callout{border-left:3px solid var(--orange);background:#fdf8f1;
+    padding:14px 18px;margin:0 0 24px;font-size:15px}
+  .note{font-size:13.5px;color:var(--grey);border-left:3px solid var(--line);
+    padding:2px 0 2px 13px;margin:14px 0}
+  .callout strong{color:var(--orange)}
+  .pitch{font-size:17px;line-height:1.8;border-left:3px solid var(--blue);padding:4px 0 4px 20px;margin:0 0 22px}
+  .sub2{font-weight:400;font-size:12px;color:var(--faint)}
+  table{border-collapse:collapse;width:100%;margin:0 0 20px;font-size:14.5px}
+  caption{caption-side:bottom;text-align:left;color:var(--faint);font-size:12.5px;padding-top:10px}
+  th,td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line)}
+  thead th{background:var(--soft);font-weight:600;font-size:13.5px;border-bottom:1px solid #d9dee5}
+  tbody tr:last-child td{border-bottom:0}
+  .layer{display:flex;gap:16px;align-items:baseline;border:1.5px solid var(--line);
+    border-left-width:6px;border-radius:7px;padding:13px 16px;margin-bottom:9px}
+  .layer.b{border-left-color:var(--blue)}
+  .layer.t{border-left-color:var(--teal)}
+  .layer.o{border-left-color:var(--orange)}
+  .layer .nm{font-weight:600;min-width:84px;flex:0 0 auto}
+  .layer.b .nm{color:var(--blue)} .layer.t .nm{color:var(--teal)} .layer.o .nm{color:var(--orange)}
+  .layer .sub2{display:block;font-weight:400;font-size:12.5px;color:var(--faint)}
+  .layer .bd{font-size:14.5px}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px}
+  .chip{flex:1 1 128px;border:1px solid var(--line);border-radius:7px;
+    background:var(--soft);padding:13px 10px;text-align:center}
+  .chip .n{display:block;font-size:25px;color:var(--blue);font-weight:600;
+    font-variant-numeric:tabular-nums;line-height:1.25}
+  .chip .l{display:block;font-size:12px;color:var(--grey);margin-top:3px}
+  figure{margin:22px 0 0}
+  figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:6px}
+  figcaption{color:var(--faint);font-size:12.5px;margin-top:9px}
+  ol,ul{margin:0 0 16px;padding-left:22px}
+  li{margin-bottom:9px}
+  code{font-family:var(--mono);font-size:13px;background:var(--soft);padding:1.5px 5px;border-radius:3px}
+  .access{display:flex;gap:26px;align-items:center;flex-wrap:wrap;
+    border:1px solid var(--line);border-radius:8px;padding:20px 22px;margin:6px 0 20px}
+  .access img{width:148px;height:148px;display:block;flex:0 0 auto}
+  .access .t{flex:1 1 260px;min-width:0}
+  .access .t p{margin:0 0 8px;font-size:14.5px}
+  .access .u{font-family:var(--mono);font-size:13px;word-break:break-all;color:var(--blue)}
+  footer{border-top:1px solid var(--line);margin-top:52px;padding:24px 0 60px;
+    color:var(--faint);font-size:13px}
+  footer p{margin:0 0 7px}
+  @media (max-width:620px){
+    header{padding-top:38px} h1{font-size:27px} .sub{font-size:15.5px}
+    .layer{flex-direction:column;gap:5px} .layer .nm{min-width:0}
+    table{font-size:13.5px} th,td{padding:9px 10px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p style="margin:0 0 14px;font-size:14px"><a href="index.html">← 复泽智药</a></p>
+  <span class="badge">内测阶段 · 事实库与评测基准已交付</span>
+  <h1>F-Med 医保智能体</h1>
+<p class="lede">医保基金监管与控费垂直模块。<strong>规则层直接消费国家医保局「两库」，不自建平行规则体系</strong>；大模型只承担规则引擎表达不了的那一层——自然语言支付范围限定对自然语言病历的适用判定。</p>
+
+<h2>法定依据</h2>
+<p>《医疗保障基金使用监督管理条例实施细则》（国家医疗保障局令第 7 号，2026-02-12 局务会议审议通过，<strong>2026-04-01 施行</strong>，五章四十六条）<strong>第五条</strong>规定：医疗保障经办机构应当履行协议管理职责，对定点医药机构申报的费用采取日常审核、<strong>智能审核</strong>、抽查审核、核查检查等基金使用管理措施。</p>
+<p>智能审核由此成为经办机构的<strong>法定职责</strong>，而非可选采购项。同条规定的拒付义务是<strong>双向</strong>的——应当由基金支付的应当按规定结算，不应当支付的应当按政策规定与服务协议约定拒付。<strong>法规本身即要求不得滥拒</strong>，这是下文「误拒代价高于误批」红线的法律依据，而非本项目自设的伦理标准。</p>
+
+<div class="callout">
+<p><strong>目标函数红线。</strong>本模块优化的是<strong>不当支付的减少</strong>，不是支付的减少。一个被训练去最小化支出的模型，学到的会是拒付——因为拒付欺诈与拒付正当治疗，在「减少支出」这个指标上完全等价。奖励函数中<strong>误拒的代价被显式设为高于误批</strong>：误批损失的是钱，可追回；误拒损失的是治疗，不可逆。</p>
+<p><strong>定位区分。</strong>政府基本医保全民覆盖、不可风险筛选，<strong>不存在核保环节</strong>。政府侧是「基金精算 + 支付审核 + 反欺诈」，核保与风险定价属于商业健康险与惠民保。</p>
+</div>
+
+<h2>规则层：消费国家「两库」而非自建</h2>
+<p>国家医保局组织编写的《国家医保基金智能监管知识库、规则库（2025 年版）》已出版发行，知识点明细按批次向社会公开（<strong>PDF + XLSX</strong>，截至 2026-09-08 已发布第二十一批）。各省级医保部门须据此对省级医保信息平台智能监管子系统「两库」动态更新。</p>
+<p>本模块<strong>原生消费官方格式</strong>，理由有二：</p>
+<ul>
+<li>官方库免费、权威，且省级平台有同步义务——自建平行库既重复投入，又会在判定口径上与省平台产生分歧，<strong>口径分歧本身就是审核风险</strong>；</li>
+<li>规则库既然是公共品，差异化就不在规则库，而在规则库表达不了的那一层。</li>
+</ul>
+<p><strong>实测：</strong>摄取第二十一批（「诊断与患者性别不符」规则），<strong>378 条知识点全部入库，378 条可用约束</strong>，三个用例判定正确；星剑号诊断码（如 <code>A18.100x026+N74.1*</code>）的主码回退匹配已处理。</p>
+
+<h2>临床用药检出</h2>
+<table>
+<tr><th>检查</th><th>性质</th><th>实现</th></tr>
+<tr><td>超量用药</td><td>确定性</td><td>成分归一 → 窗口内剂量累加 → 说明书上限比较。<strong>规则引擎完成，大模型不参与</strong></td></tr>
+<tr><td>重复用药</td><td>确定性</td><td>同成分重复 / 同药理类别重复</td></tr>
+<tr><td>超适应症</td><td><strong>唯一需要大模型</strong></td><td>说明书适应症与病历诊断均为自然语言，蕴含关系无法用规则表达</td></tr>
+</table>
+<p><strong>真正的难点是剂量归集，不是阈值表。</strong>实测用例：单方格列本脲 5 mg/日 ＋ 复方制剂内含格列本脲 5 mg/日，<strong>逐方审查均合规，合并后 10 mg/日</strong>。同一成分可能分散在多张处方、以不同商品名出现、或藏在复方制剂里——不先归一到活性成分，剂量累加就是错的。</p>
+<p class="note">剂量上限表为<strong>演示用种子数据，非临床权威数据</strong>。真实部署必须由现行《药品说明书》逐品种解析生成并记录版本号与解析时间戳；上限随说明书修订而变，用过期上限会直接产出假阳性违规。</p>
+
+<h2>风控矩阵：时间轴 × 对象轴</h2>
+<p>事前／事中／事后 × 医院／医师／患者／药品／物流，<strong>15 个单元格</strong>，含不变量校验。两条设计约束是对标方案未显式表述、但缺之即错的：</p>
+<ul>
+<li><strong>证据门槛随时间轴前移而升高</strong>（事前 3 ＞ 事中 2 ＞ 事后 1）。事前拦截发生在治疗之前，误拦阻断的是正当治疗，不可逆；事后追回发生在支付之后，误判只多一轮复核，钱可追回。三个时点使用同一阈值，等于把不可逆风险与可逆风险同价处理。</li>
+<li><strong>事前 × 物流是空单元格</strong>——药品尚未流转，不存在物流数据。这是数据事实而非待补缺口；标成「待补」会诱导后续开发去造一个无源之水的模型。</li>
+</ul>
+<p>倒药的<strong>唯一可证实环节是物流，不是处方</strong>：处方、剂量、适应症全部合规的药同样可以被倒卖。全国已归集药品追溯码超 1000 亿条，是该对象的官方数据底座。</p>
+
+<h2>上海控费测算</h2>
+<p>按人头总额打包 ＋ 结余留用、超支不补，其财务前提是基金有结余可分。</p>
+<table>
+<tr><th>年度</th><th>职工医保当期结余率</th><th>城乡居民医保当期结余率</th></tr>
+<tr><td>2023</td><td><strong>43.1%</strong></td><td><strong>−13.7%</strong></td></tr>
+<tr><td>2024</td><td><strong>24.6%</strong></td><td><strong>+0.2%</strong></td></tr>
+</table>
+<p>（由上海市医保局年度信息披露公告的收入与支出计算；对照天津 2023 年职工医保当期结余率 27.7%、全国平均 22.6%。）</p>
+<p><strong>职工医保具备结余空间，可试点按人头打包；城乡居民医保不具备，结余留用不适用。</strong>对无结余空间的险种推行结余分成，等于拿保基本的钱去赌结余。</p>
+
+<table>
+<tr><th>控费杠杆</th><th>低</th><th>中</th><th>高</th></tr>
+<tr><td>① 智能审核（第五条法定职责）</td><td>0.73</td><td>1.22</td><td>2.45</td></tr>
+<tr><td>② 全口径监管追回</td><td>9.27</td><td>15.44</td><td>21.62</td></tr>
+<tr><td>③ 职工医保支出增速每降 1 个百分点</td><td>7.73</td><td>15.45</td><td>30.90</td></tr>
+<tr><td>④ 慢病按人头打包 ＋ 结余留用（限职工医保）</td><td>8.02</td><td>15.45</td><td>27.04</td></tr>
+</table>
+<p>单位亿元/年，2024 年基金支出基数 1,667.8 亿元。中值直接相加 47.56 亿元，<strong>扣除 45% 杠杆重叠后年化约 26.16 亿元，占基金支出 1.57%</strong>。杠杆之间高度重叠：智能审核命中的违规与飞检追回的是同一批钱。</p>
+
+<div class="callout">
+<p><strong>这个数字不大，而这正是它可信的原因。</strong>对照官方数据：《条例》实施近五年来各级医保部门累计追回医保资金约 1200 亿元，其中<strong>智能监管挽回基金损失 95 亿元</strong>，占 7.9%。技术手段在全国五年的实际产出就是这个量级。承诺「AI 节省 10%」的方案与该官方数字相差一个数量级。</p>
+<p><strong>独立校验：</strong>天津西青区累计拦截违规 8.23 万次、涉及金额 864 万元，<strong>平均每次约 105 元</strong>——这个领域全是小额高频，没有大案。按人口外推至上海约 1.5 亿元累计，与①号杠杆同量级。</p>
+</div>
+
+<h2>测量设计</h2>
+<p>节省额不由乙方自报。采用<strong>分批推行形成对照</strong>：</p>
+<ol>
+<li>预先约定基线口径（险种、统计期、剔除政策性调整项）</li>
+<li>区县分批上线，未上线区县构成同期对照</li>
+<li>「节省」的可审计定义：拒付金额 ＋ 追回金额 ＋ 对照组校正后的费用增速差额</li>
+<li><strong>误拒率与申诉改判率与节省额同权公示</strong>；误拒率超阈值则暂停推进</li>
+<li><strong>质量守门</strong>：慢病管理达标率、基层门诊量、再入院率不得劣化，劣化即触发中止</li>
+</ol>
+<p>第 4、5 两条是刚性的。天津的「结余留用、超支不补」本身就是<strong>在总额预算管理下根据医疗健康管理质量考核结果</strong>落实的——质量考核是结余留用的前置条件，不是附加项。</p>
+
+<h2>指标口径：拒付率不是付方指标</h2>
+<p>对标方案公开数据显示医保审核拒付率由 2021H1 约 0.52% 降至 2025H1 约 0.05%。该方在当地处于<strong>供方</strong>位置，拒付率下降是供方收益。对<strong>付方</strong>而言，拒付率下降有两种不可区分的成因：违规申报真的减少（好），或审核尺度变松（坏）。</p>
+<p>付方的对应 KPI 是<strong>不当支付率</strong>（抽样复核认定的不当支付额／总支付额），不是拒付率。本模块对外<strong>只报付方指标</strong>：不当支付率、误拒率与申诉改判率、对照组校正后的费用增速差；<strong>不报</strong>拒付率与拦截笔数。</p>
+
+<h2>能力边界</h2>
+<ul>
+<li><strong>经典精算方法在基金收支预测上严格更优。</strong>信度理论、GLM/GAM、链梯法与 B-F 准备金、随机模拟——把基金预测交给语言模型是技术选型错误。本模块的语言模型只用于规则适用判定。</li>
+<li><strong>中国个人级医保结算数据不公开</strong>，公开的只有汇总统计与规则文本。个人级数据须由需方在机构协议下提供。</li>
+<li><strong>上海基数尚未核对公告原文。</strong>市医保局站点返回服务器侧 403，当前数字转引自公开报道，<strong>提交前须补齐原文核对</strong>。</li>
+<li><strong>面向 C 端居民须先过网信办生成式人工智能服务登记。</strong>该申请应与模型训练并行启动，不是上线前补办。</li>
+<li><strong>尚未训练、尚未部署</strong>，无任何现网拦截额或覆盖机构数。本页为设计规格与测算，不是成果发布。</li>
+</ul>
+
+<h2>不可行路径</h2>
+<p>国内医保智能体均为专有产品，<strong>开放权重数量为零</strong>，不存在可蒸馏对象；大规模调用其居民端入口采集输出用于训练违反其服务条款，且会使训练数据来源在医保局评审中不可交代。本项目不采用该路径。</p>
+<p class="note">文中对标产品数据均引自公开报道，为第三方自报或媒体转述，<strong>未经独立核实</strong>。机构数 266 家为 2020-04 组建时数字、273 家为现状，两者皆真而时点不同；结余率按口径分别为基层机构 16%–31%、卫健委约 17.31%、2023 年门特糖尿病超 20%、招股书 18 个月人均额度超 25%，<strong>其中 25% 对应门特糖尿病会员而非全基金</strong>。</p>
+
+<footer>
+  <p><strong>免责声明：</strong>本页为模块设计与测算，不构成医疗、医保或支付决策依据。所有测算为给定假设下的区间，<strong>非承诺值</strong>。模块尚未训练与部署，任何关于其实际效果的陈述在试点实测完成前都没有依据。</p>
+  <p><a href="index.html">← 返回复泽智药</a></p>
+</footer>
+</div>
+</body>
+</html>
